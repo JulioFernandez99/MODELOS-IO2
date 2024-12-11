@@ -84,11 +84,24 @@ def mek1_calculator():
     unidad_tiempo_nombre = "horas" if unidad_tiempo == "h" else "minutos"
     lamda = float(input(f"Ingrese el valor de λ (tasa de llegadas por unidad de tiempo en {unidad_tiempo_nombre}): "))
     mu = float(input(f"Ingrese el valor de μ (tasa de servicio por unidad de tiempo en {unidad_tiempo_nombre}): "))
-    sigma = float(input(f"Ingrese el valor del error típico (σ) en los tiempos de servicio en {unidad_tiempo_nombre}: "))
+    
+    # Elegir tipo de dato a proporcionar
+    print("Seleccione qué dato proporcionará:")
+    print("1. Número de etapas en la distribución Erlang (k)")
+    print("2. Error típico (σ)")
+    dato_tipo = input("Ingrese el número de su elección: ").strip()
 
-    # Calcular k
-    k = 1 / (mu**2 * sigma**2)
-    print(f"El valor calculado de k es: {k:.4f}")
+    if dato_tipo == "1":
+        k = float(input("Ingrese el valor de k (número de etapas en la distribución Erlang): "))
+        sigma = 1 / (mu * (k**0.5))
+        print(f"El error típico calculado (σ) es: {sigma:.4f} {unidad_tiempo_nombre}.")
+    elif dato_tipo == "2":
+        sigma = float(input(f"Ingrese el valor del error típico (σ) en los tiempos de servicio en {unidad_tiempo_nombre}: "))
+        k = 1 / (mu**2 * sigma**2)
+        print(f"El valor calculado de k es: {k:.4f}")
+    else:
+        print("Opción no válida.")
+        return
 
     # Validar que el sistema sea estable
     rho = lamda / mu
@@ -111,4 +124,5 @@ def mek1_calculator():
     print(f"Número promedio de clientes en el sistema (Ls): {Ls:.4f}")
     print(f"Tiempo promedio de espera en la cola (Wq) en {unidad_tiempo_nombre}: {Wq:.4f}")
     print(f"Tiempo promedio de estancia en el sistema (Ws) en {unidad_tiempo_nombre}: {Ws:.4f}")
+    
 mek1_calculator()

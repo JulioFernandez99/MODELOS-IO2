@@ -1,55 +1,55 @@
+import math
 
-def calculate_mm1k_metrics(lam, mu, k,pc):
+def factorial(n):
+    return 1 if n == 0 else n * factorial(n - 1)
 
-    rho = lam / mu
-
-    # Probabilidad de que el sistema esté vacío (P0)
-    if rho != 1:
-        P0 = (1 - rho) / (1 - (rho ** (k + 1)))
-    else:
-        P0 = 1 / (k + 1)
+def calculate_mms_metrics(lam, mu, s):
+    rho = lam / (s * mu)  # Factor de utilización
+    if rho >= 1:
+        return None, None, None, None, None, None, None, None, f"El sistema no es estable (ρ = {rho:.2f}) porque ρ >= 1."
     
-    pc = P0
-    # Tasa efectiva de llegada (λef)
-    lam_ef = lam * (1 - (rho ** k) * P0)
-
-    # Número promedio de clientes en el sistema (Ls)
-    if rho != 1:
-        Ls = (rho / (1 - rho)) - ((k + 1) * (rho ** (k + 1)) / (1 - rho ** (k + 1)))
-    else:
-        Ls = k / 2
-
-    # Número promedio de clientes en cola (Lq)
-    Lq = Ls - (1 - P0)
-
-    # Tiempo promedio en el sistema (Ws)
-    Ws = Ls / lam_ef
-
+    # Probabilidad de que no haya clientes en el sistema (P0)
+    summation = sum((lam / mu) ** n / factorial(n) for n in range(s))
+    last_term = ((lam / mu) ** s) / (factorial(s) * (1 - rho))
+    P0 = 1 / (summation + last_term)
+    
+    # Número esperado de clientes en la cola (Lq)
+    Lq = (P0 * ((lam / mu) ** s) * rho) / (factorial(s) * (1 - rho) ** 2)
+    
+    # Número esperado de clientes en el sistema (Ls)
+    Ls = Lq + lam / mu
+    
     # Tiempo promedio en la cola (Wq)
-    Wq = Lq / lam_ef
-
-    return lam_ef, rho, Lq, Ls, Wq, Ws,pc, None
-
+    Wq = Lq / lam
+    
+    # Tiempo promedio en el sistema (Ws)
+    Ws = Ls / lam
+    
+    # Probabilidades
+    P_ocupado = rho  # Probabilidad de estar ocupado
+    P_libre = 1 - rho  # Probabilidad de estar libre
+    
+    return rho, Lq, Ls, Wq, Ws, P_libre, P_ocupado, None
 
 def main():
-    print("Cálculo para un sistema M/M/1/K")
+    print("Cálculo para un sistema M/M/s")
     unit = input("¿Los valores están en horas o minutos? (h/m): ").strip().lower()
-    pc = 0
+    
     if unit not in ['h', 'm']:
         print("Entrada no válida. Usa 'h' para horas o 'm' para minutos.")
         return
 
     lam = float(input("Ingrese la tasa de llegada (λ): "))
     mu = float(input("Ingrese la tasa de servicio (μ): "))
-    k = int(input("Ingrese la capacidad máxima del sistema (k): "))
+    s = int(input("Ingrese el número de servidores (s): "))
 
     # Convertir valores si están en minutos
     if unit == 'm':
         lam /= 60  # Convertir λ de por minuto a por hora
         mu /= 60   # Convertir μ de por minuto a por hora
-
-    lam_ef, rho, Lq, Ls, Wq, Ws,pc, error = calculate_mm1k_metrics(lam, mu, k,pc)
-
+    
+    rho, Lq, Ls, Wq, Ws, P_libre, P_ocupado, error = calculate_mms_metrics(lam, mu, s)
+    
     if error:
         print(error)
     else:
@@ -57,16 +57,15 @@ def main():
         if unit == 'm':
             Wq *= 60  # Convertir tiempo promedio de horas a minutos
             Ws *= 60
-       
+
         print("\nResultados:")
-        print(f"Probabilidad que no haya nadie en el sistema(P0): {pc} -> {pc*100}%")
-        print(f"Tasa efectiva de llegada (λef): {lam_ef:.4f}")
         print(f"Factor de utilización (ρ): {rho:.4f}")
         print(f"Número esperado de clientes en la cola (Lq): {Lq:.4f}")
         print(f"Número esperado de clientes en el sistema (Ls): {Ls:.4f}")
         print(f"Tiempo promedio en la cola (Wq): {Wq:.4f} {'minutos' if unit == 'm' else 'horas'}")
         print(f"Tiempo promedio en el sistema (Ws): {Ws:.4f} {'minutos' if unit == 'm' else 'horas'}")
-
+        print(f"Probabilidad de que el sistema esté libre: {P_libre:.4f}")
+        print(f"Probabilidad de que el sistema esté ocupado: {P_ocupado:.4f}")
 
 if __name__ == "__main__":
     main()
